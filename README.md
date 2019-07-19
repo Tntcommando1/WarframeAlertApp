@@ -5,12 +5,7 @@ The app uses no Stateful widgets and is very small.
 
 ## App Design
 
-```mermaid
-graph LR
-A[Main Method] --> |Pass in fetchFeed|B[MyApp]
-B --> C[Build Method]
-C -->|Future Builder| D[List Builder creates list]
-```
+<img src="diagram.svg" width="750">
 
 ## Future Updates
 
