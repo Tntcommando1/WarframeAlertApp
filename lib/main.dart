@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webfeed/webfeed.dart';
 import 'httpFeed.dart';
 import 'package:fancy_bottom_navigation/fancy_bottom_navigation.dart';
+import 'util/constants.dart';
 
 void main() => runApp(MyApp());
 
@@ -19,7 +20,7 @@ class MyAppState extends State<MyApp> {
   int navIndex = 0;
 
   // TITLE OF THE APP BAR
-  String title = "Warframe PC";
+  String title = "WARFRAME PC";
 
   // SET THE TAB INDEX AND SET THE FEED DATA WHILE RESETTING THE STATE
   void incrementTab(index) {
@@ -39,11 +40,11 @@ class MyAppState extends State<MyApp> {
   void setFeedData(int index) {
     if(index == 0) {
       feed = fetchFeed(urlPC);
-      title = "Warframe PC";
+      title = "WARFRAME PC";
     }
     else if(index == 1){
       feed = fetchFeed(urlPS4);
-      title = "Warframe PS4";
+      title = "WARFRAME PS4";
     }
   }
 
@@ -52,15 +53,14 @@ class MyAppState extends State<MyApp> {
     return MaterialApp(
 
       // THE THEME IS A DARK THEME
-      theme: ThemeData(
-        brightness: Brightness.dark,
-      ),
+      theme: Constants.darkTheme,
 
       home: Scaffold(
         // TOP MENU BAR
         appBar: AppBar(
           title: new Text(title),
           centerTitle: true,
+
         ),
 
         bottomNavigationBar: FancyBottomNavigation(
@@ -69,6 +69,11 @@ class MyAppState extends State<MyApp> {
             TabData(iconData: Icons.gamepad, title: "PS4"),
           ],
           onTabChangedListener: (position) => incrementTab(position),
+          barBackgroundColor: Constants.darkAccent,
+          circleColor: Constants.darkBG,
+          textColor: Constants.darkBG,
+          activeIconColor: Constants.darkAccent,
+          inactiveIconColor: Constants.darkBG,
         ),
 
         // BODY OF APP
@@ -79,24 +84,41 @@ class MyAppState extends State<MyApp> {
               child: FutureBuilder<RssFeed>(future: feed, builder: (context, snapshot) {
                 // IF THE FEED RETURNS DATA
                 if(snapshot.hasData){
+                  return Column (
+                    children: <Widget>[
 
-                  // USE A LIST BUILDER
-                  return ListView.builder(
-                    // THE NUMBER OF ITEMS MATCH THE NUMBER OF OBJECTS IN THE ITEMS LIST IN THE SNAPSHOT
-                    itemCount: snapshot.data.items.length,
+                      // DIVIDING LINE FOR DETAIL
+                      Divider(height: 10, color: Constants.darkAccent, indent: 20, endIndent: 20,),
 
-                    // BASICALLY A FOR LOOP BUT FOR THE LIST BUILDER INDEX IS LIKE THE VARIABLE
-                    itemBuilder: (context, index) {
+                      // EXPAND OUT THE REST
+                      Expanded(
+                        child: 
+                          // USE A LIST BUILDER
+                          ListView.builder(
+                          // THE NUMBER OF ITEMS MATCH THE NUMBER OF OBJECTS IN THE ITEMS LIST IN THE SNAPSHOT
+                          itemCount: snapshot.data.items.length,
 
-                      // RETURN A LIST TILE AT EACH POSITION WITH THE CORRESPONDING DATA
-                      return new ListTile(
-                        title: Text(snapshot.data.items[index].title),
-                        subtitle: Text(snapshot.data.items[index].author),
-                        leading: Icon(Icons.assignment),
-                      );
-                    },
+                          // BASICALLY A FOR LOOP BUT FOR THE LIST BUILDER INDEX IS LIKE THE VARIABLE
+                          itemBuilder: (context, index) {
+
+                            // RETURN A LIST TILE AT EACH POSITION WITH THE CORRESPONDING DATA
+                            return new ListTile(
+                              title: Text(snapshot.data.items[index].title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Open Sans')),
+                              subtitle: Text(snapshot.data.items[index].author, style: TextStyle(fontWeight: FontWeight.w300, fontSize: 13, fontFamily: 'Open Sans')),
+                              leading: Icon(Icons.assignment),
+                            );
+                          },
+                        )
+                      ),
+                      
+                    ],
                   );
                 }
+
+                if(snapshot.hasError) {
+                  return Text(snapshot.error);
+                }
+
                 // IF THE FEED DOES NOT RETURN DATA... LOAD
                 return CircularProgressIndicator();
               }),
