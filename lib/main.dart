@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webfeed/webfeed.dart';
 import 'httpFeed.dart';
+import 'package:fancy_bottom_navigation/fancy_bottom_navigation.dart';
 
 void main() => runApp(MyApp());
 
@@ -62,34 +63,18 @@ class MyAppState extends State<MyApp> {
           centerTitle: true,
         ),
 
-        // BOTTOM MENU BAR
-        bottomNavigationBar: BottomNavigationBar(
-
-          // CURRENT INDEX IN THE NAVIGATION
-          currentIndex: navIndex,
-          type: BottomNavigationBarType.shifting,
-
-          // ITEMS IN THE NAV BAR
-          items: [
-            BottomNavigationBarItem(
-              title: Text("PC"),
-              icon: Icon(Icons.computer)
-            ),
-            BottomNavigationBarItem(
-              title: Text("PS4"),
-              icon: Icon(Icons.gamepad)
-            ),
+        bottomNavigationBar: FancyBottomNavigation(
+          tabs: [
+            TabData(iconData: Icons.computer, title: "PC"),
+            TabData(iconData: Icons.gamepad, title: "PS4"),
           ],
-
-          // METHOD TO HANDLE THE ON TAP OF ANY ITEM IN THE BAR PASSING IN THE INDEX OF THE TAP
-          onTap: (index){
-            incrementTab(index);
-          },
+          onTabChangedListener: (position) => incrementTab(position),
         ),
 
         // BODY OF APP
         body: Center(
           child: Container(
+            margin: EdgeInsets.only(bottom: 20),
             child: RefreshIndicator(
               child: FutureBuilder<RssFeed>(future: feed, builder: (context, snapshot) {
                 // IF THE FEED RETURNS DATA
