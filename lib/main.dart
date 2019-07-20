@@ -1,26 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:webfeed/webfeed.dart';
-import 'package:http/http.dart' as http;
+import 'httpFeed.dart';
 
-// RUN THE APP AND SET THE FEED TO WHATEVER THE FETCH FEED RETURNS (NEEDS MORE ERROR HANDLING)
-void main() => runApp(MyApp(feed: fetchFeed()));
+void main() => runApp(MyApp());
 
-// URL OF THE RSS FEED
-var url = 'http://content.warframe.com/dynamic/rss.php';
-
-Future<RssFeed> fetchFeed() async {
-
-  // DO AN HTTP REQUEST
-  final response = await http.get(url);
-
-  // PARSE THE HTTP REQUEST RESULT BODY INTO AN RSSFEED OBJECT
-  return RssFeed.parse(response.body);
+class MyApp extends StatefulWidget {
+  @override
+  MyAppState createState() => MyAppState();
 }
 
-class MyApp extends StatelessWidget {
-  final Future<RssFeed> feed;
+class MyAppState extends State<MyApp> {
 
-  MyApp({Key key, this.feed}) : super(key: key);
+  // FEED FOR THE LIST
+  Future<RssFeed> feed = fetchFeed(urlPC);
+
+  // CURRENT NAVIGATION INDEX
+  int navIndex = 0;
+
+  // TITLE OF THE APP BAR
+  String title = "Warframe PC";
+
+  // SET THE TAB INDEX AND SET THE FEED DATA WHILE RESETTING THE STATE
+  void incrementTab(index) {
+    setState(() {
+      navIndex = index;
+      setFeedData(index);
+    });
+  }
+
+  Future<void> refreshFeed() async {
+    setState(() {
+      setFeedData(navIndex);
+    });
+  }
+
+  // CHECK THE CURRENT INDEX AND CHANGE VALUES ACCORDINGLY
+  void setFeedData(int index) {
+    if(index == 0) {
+      feed = fetchFeed(urlPC);
+      title = "Warframe PC";
+    }
+    else if(index == 1){
+      feed = fetchFeed(urlPS4);
+      title = "Warframe PS4";
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,43 +58,65 @@ class MyApp extends StatelessWidget {
       home: Scaffold(
         // TOP MENU BAR
         appBar: AppBar(
-          title: new Text("Warframe"),
-          leading: Icon(Icons.menu),
+          title: new Text(title),
           centerTitle: true,
+        ),
+
+        // BOTTOM MENU BAR
+        bottomNavigationBar: BottomNavigationBar(
+
+          // CURRENT INDEX IN THE NAVIGATION
+          currentIndex: navIndex,
+          type: BottomNavigationBarType.shifting,
+
+          // ITEMS IN THE NAV BAR
+          items: [
+            BottomNavigationBarItem(
+              title: Text("PC"),
+              icon: Icon(Icons.computer)
+            ),
+            BottomNavigationBarItem(
+              title: Text("PS4"),
+              icon: Icon(Icons.gamepad)
+            ),
+          ],
+
+          // METHOD TO HANDLE THE ON TAP OF ANY ITEM IN THE BAR PASSING IN THE INDEX OF THE TAP
+          onTap: (index){
+            incrementTab(index);
+          },
         ),
 
         // BODY OF APP
         body: Center(
           child: Container(
+            child: RefreshIndicator(
+              child: FutureBuilder<RssFeed>(future: feed, builder: (context, snapshot) {
+                // IF THE FEED RETURNS DATA
+                if(snapshot.hasData){
 
-            // CREATE PADDING AROUND THE FUTURE BUILDER
-            margin: EdgeInsets.fromLTRB(10, 20, 10, 20),
-            child: FutureBuilder<RssFeed>(future: feed, builder: (context, snapshot) {
+                  // USE A LIST BUILDER
+                  return ListView.builder(
+                    // THE NUMBER OF ITEMS MATCH THE NUMBER OF OBJECTS IN THE ITEMS LIST IN THE SNAPSHOT
+                    itemCount: snapshot.data.items.length,
 
-              // IF THE FEED RETURNS DATA
-              if(snapshot.hasData){
+                    // BASICALLY A FOR LOOP BUT FOR THE LIST BUILDER INDEX IS LIKE THE VARIABLE
+                    itemBuilder: (context, index) {
 
-                // USE A LIST BUILDER
-                return ListView.builder(
-
-                  // THE NUMBER OF ITEMS MATCH THE NUMBER OF OBJECTS IN THE ITEMS LIST IN THE SNAPSHOT
-                  itemCount: snapshot.data.items.length,
-
-                  // BASICALLY A FOR LOOP BUT FOR THE LIST BUILDER INDEX IS LIKE THE VARIABLE
-                  itemBuilder: (context, index) {
-
-                    // RETURN A LIST TILE AT EACH POSITION WITH THE CORRESPONDING DATA
-                    return new ListTile(
-                      title: Text(snapshot.data.items[index].title),
-                      subtitle: Text(snapshot.data.items[index].author),
-                      leading: Icon(Icons.assignment),
-                    );
-                  },
-                );
-              }
-              // IF THE FEED DOES NOT RETURN DATA... LOAD
-              return CircularProgressIndicator();
-            })
+                      // RETURN A LIST TILE AT EACH POSITION WITH THE CORRESPONDING DATA
+                      return new ListTile(
+                        title: Text(snapshot.data.items[index].title),
+                        subtitle: Text(snapshot.data.items[index].author),
+                        leading: Icon(Icons.assignment),
+                      );
+                    },
+                  );
+                }
+                // IF THE FEED DOES NOT RETURN DATA... LOAD
+                return CircularProgressIndicator();
+              }),
+              onRefresh: refreshFeed,
+            ),
           )
         ) 
       )
